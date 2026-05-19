@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block content %}
+<!-- 狂野飙车9风格欢迎横幅 -->
+<div style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, rgba(20, 20, 40, 0.9) 100%); border-radius: 20px; margin-bottom: 2rem; position: relative; overflow: hidden; border: 1px solid rgba(255, 102, 0, 0.3);">
+    <!-- 速度线背景效果 -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255, 102, 0, 0.03) 50px, rgba(255, 102, 0, 0.03) 51px); pointer-events: none;"></div>
+    
+    <h1 style="font-size: 2.8rem; margin-bottom: 1rem; background: linear-gradient(135deg, #ff6600 0%, #ffb300 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: none; position: relative;">
+        🏎️ 狂野飙车9国服账号交易平台
+    </h1>
+    <p style="font-size: 1.3rem; color: #ff9500; margin-bottom: 1rem; text-shadow: 0 0 20px rgba(255, 102, 0, 0.5);">
+        极速交易 · 安全保障 · 官方授权
+    </p>
+    {% if not user %}
+        <p style="color: #888; font-size: 1rem; margin-bottom: 1.5rem;">
+            👋 游客可自由浏览所有账号，登录后可发起交易
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('accounts') }}" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem; box-shadow: 0 4px 20px rgba(255, 102, 0, 0.5);">
+                🔍 浏览账号市场
+            </a>
+            <a href="{{ url_for('register') }}" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                立即注册
+            </a>
+        </div>
+    {% else %}
+        <a href="{{ url_for('accounts') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2.5rem; box-shadow: 0 4px 20px rgba(255, 102, 0, 0.5);">
+            🚀 开始选购
+        </a>
+    {% endif %}
+</div>
+
+<!-- 保险服务宣传 - 狂野飙车9风格 -->
+<div style="background: linear-gradient(135deg, rgba(0, 200, 83, 0.15) 0%, rgba(0, 150, 60, 0.1) 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center; border: 1px solid rgba(0, 200, 83, 0.3);">
+    <h3 style="margin-bottom: 0.5rem; color: #00c853;">🛡️ 找回保险服务</h3>
+    <p style="margin-bottom: 1rem; opacity: 0.9; color: #aaa;">购买账号时只需+10%即可开通，如账号被找回可获得全额赔付！</p>
+    <span style="background: rgba(0, 200, 83, 0.2); padding: 0.5rem 1.2rem; border-radius: 20px; font-size: 0.9rem; color: #00c853; border: 1px solid rgba(0, 200, 83, 0.3);">
+        💡 安全交易，放心购买
+    </span>
+</div>
+
+<!-- 广告位1：闲鱼精英挂机熊旗舰店 -->
+<div class="ad-banner wide" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, rgba(255, 153, 0, 0.1) 100%); border: 2px solid rgba(255, 102, 0, 0.4);">
+    <img src="/static/uploads/闲鱼店铺广告_banner_一只有趣的卡通小熊玩偶形象_橙色_2026-05-18T16-33-05.png" alt="闲鱼精英挂机熊旗舰店" style="max-height: 80px; border-radius: 8px; margin-bottom: 0.5rem;">
+    <span class="ad-title">🧸 闲鱼精英挂机熊旗舰店</span>
+    <span class="ad-subtitle">官方认证店铺 | 品质保证 | 售后无忧</span>
+    <a href="https://market.m.taobao.com/" target="_blank" class="btn btn-primary" style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;">立即前往</a>
+</div>
+
+<!-- 平台统计 - 狂野飙车9风格 -->
+<div class="grid" style="margin-bottom: 3rem;">
+    <div class="card" style="text-align: center; border: 1px solid rgba(255, 102, 0, 0.2);">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎮</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #ff9500;">{{ latest_accounts|length * 5 + 12 }}</div>
+        <div style="color: #aaa;">在售账号</div>
+    </div>
+    <div class="card" style="text-align: center; border: 1px solid rgba(255, 102, 0, 0.2);">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👥</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #ff9500;">3</div>
+        <div style="color: #aaa;">注册用户</div>
+    </div>
+    <div class="card" style="text-align: center; border: 1px solid rgba(255, 102, 0, 0.2);">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💰</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #ff9500;">100%</div>
+        <div style="color: #aaa;">安全交易</div>
+    </div>
+    <div class="card" style="text-align: center; border: 1px solid rgba(255, 102, 0, 0.2);">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⭐</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #ff9500;">5.0</div>
+        <div style="color: #aaa;">用户好评</div>
+    </div>
+</div>
+
+<!-- 最新上架 -->
+{% if latest_accounts %}
+<section style="margin-bottom: 3rem;">
+    <h2 class="section-title">最新上架</h2>
+    <div class="grid">
+        {% for account in latest_accounts %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <span class="badge badge-available">可售</span>
+                <span style="color: #888; font-size: 0.85rem;">Lv.{{ account.level }}</span>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">{{ account.title }}</h3>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1rem;">
+                {{ account.description[:50] }}...
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span>🚗 {{ account.cars_count }} 辆赛车</span>
+                <span class="price price-small">{{ account.price }} 金币</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #888; font-size: 0.85rem;">卖家: {{ account.seller_name }}</span>
+                <a href="{{ url_for('account_detail', account_id=account.id) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                    查看详情
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- 热门账号 -->
+{% if hot_accounts %}
+<section>
+    <h2 class="section-title">🔥 高等级神号</h2>
+    <div class="grid">
+        {% for account in hot_accounts %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <span class="badge badge-available">可售</span>
+                <span style="color: #ff6600; font-size: 1.2rem; font-weight: bold;">🔥 Lv.{{ account.level }}</span>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">{{ account.title }}</h3>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1rem;">
+                {{ account.description[:50] }}...
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span>🚗 {{ account.cars_count }} 辆赛车</span>
+                <span class="price price-small">{{ account.price }} 金币</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #888; font-size: 0.85rem;">卖家: {{ account.seller_name }}</span>
+                <a href="{{ url_for('account_detail', account_id=account.id) }}" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                    立即购买
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if user %}
+<!-- 用户快捷操作 -->
+<section style="margin-top: 3rem;">
+    <h2 class="section-title">快捷操作</h2>
+    <div class="grid">
+        <a href="{{ url_for('sell_account') }}" class="card" style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">➕</div>
+            <h3>发布账号</h3>
+            <p style="color: #aaa;">出售你的游戏账号</p>
+        </a>
+        <a href="{{ url_for('my_accounts') }}" class="card" style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+            <h3>我的账号</h3>
+            <p style="color: #aaa;">管理已发布和已购买的账号</p>
+        </a>
+        <a href="{{ url_for('recharge') }}" class="card" style="text-decoration: none; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">💎</div>
+            <h3>充值金币</h3>
+            <p style="color: #aaa;">获取更多交易资金</p>
+        </a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
