@@ -15,7 +15,7 @@ DATABASE = 'trading_platform.db' if not DATABASE_URL else DATABASE_URL
 
 def get_db():
     """获取数据库连接"""
-    if DATABASE_URL and DATABASE_URL.startswith('postgres'):
+    if DATABASE_URL and (DATABASE_URL.startswith('postgres') or DATABASE_URL.startswith('postgresql')):
         # PostgreSQL连接（云部署）
         conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
         return conn
@@ -27,7 +27,7 @@ def get_db():
 
 def is_postgresql():
     """检查是否为PostgreSQL数据库"""
-    return DATABASE_URL and DATABASE_URL.startswith('postgres')
+    return DATABASE_URL and (DATABASE_URL.startswith('postgres') or DATABASE_URL.startswith('postgresql'))
 
 def init_db():
     """初始化数据库"""
