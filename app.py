@@ -739,6 +739,18 @@ def buy_from_negotiation(negotiation_id):
 # ==================== 初始化 ====================
 
 if __name__ == '__main__':
+    # 打印数据库配置信息
+    from database import is_postgresql, DATABASE_URL
+    print(f"=" * 50)
+    print(f"数据库模式: {'PostgreSQL (云部署)' if is_postgresql() else 'SQLite (本地开发)'}")
+    if is_postgresql():
+        print(f"DATABASE_URL: {DATABASE_URL[:50]}..." if len(DATABASE_URL) > 50 else f"DATABASE_URL: {DATABASE_URL}")
+    else:
+        print(f"警告: 未检测到PostgreSQL环境变量，将使用SQLite")
+        print(f"请确保Railway已设置DATABASE_URL环境变量")
+        print(f"当前环境变量: {os.environ.get('DATABASE_URL', '未设置')}")
+    print(f"=" * 50)
+    
     # 初始化数据库
     init_db()
     # 添加议价表
@@ -749,4 +761,5 @@ if __name__ == '__main__':
     add_insurance_column()
     # Railway 使用 PORT 环境变量，本地默认 5000
     port = int(os.environ.get('PORT', 5000))
+    print(f"服务器启动于 http://0.0.0.0:{port}")
     app.run(debug=False, port=port, host='0.0.0.0')

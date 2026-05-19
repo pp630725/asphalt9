@@ -9,28 +9,37 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash
 
-# 数据库配置
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
+# 数据库配置 - 支持多种环境变量名
+DATABASE_URL = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRESQL_URL') or os.environ.get('DATABASE_URI') or ''
 DATABASE = 'trading_platform.db' if not DATABASE_URL else DATABASE_URL
-
-def get_db():
-    """获取数据库连接"""
-    if DATABASE_URL and (DATABASE_URL.startswith('postgres') or DATABASE_URL.startswith('postgresql')):
-        # PostgreSQL连接（云部署）
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        return conn
-    else:
-        # SQLite连接（本地开发）
-        conn = sqlite3.connect(DATABASE)
-        conn.row_factory = sqlite3.Row
-        return conn
 
 def is_postgresql():
     """检查是否为PostgreSQL数据库"""
-    return DATABASE_URL and (DATABASE_URL.startswith('postgres') or DATABASE_URL.startswith('postgresql'))
+    if not DATABASE_URL:
+        return False
+    # 检查各种可能的PostgreSQL URL前缀
+    url_lower = DATABASE_URL.lower()
+    pg_prefixes = ('postgres://', 'postgresql://', 'postgres:', 'postgresql:')
+    return any(url_lower.startswith(prefix) for prefix in pg_prefixes)
+
+def get_db():
+    """获取数据库连接"""
+    if is_postgresql():
+        # PostgreSQL连接（云部署）
+        try:
+            conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+            return conn
+        except Exception as e:
+            print(f"PostgreSQL连接失败: {e}")
+            print(f"DATABASE_URL: {DATABASE_URL[:50]}..." if len(DATABASE_URL) > 50 else f"DATABASE_URL: {DATABASE_URL}")
+    # SQLite连接（本地开发）
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
     """初始化数据库"""
+    print(f"[init_db] 检测到数据库模式: {'PostgreSQL' if is_postgresql() else 'SQLite'}")
     if is_postgresql():
         init_postgres_db()
     else:
