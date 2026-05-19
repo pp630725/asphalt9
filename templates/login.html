@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 2rem auto;">
+    <div class="card">
+        <h1 style="text-align: center; margin-bottom: 2rem;">🔐 用户登录</h1>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required placeholder="请输入用户名">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required placeholder="请输入密码">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                登录
+            </button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 1.5rem; color: #888;">
+            还没有账号？<a href="{{ url_for('register') }}" style="color: #e94560;">立即注册</a>
+        </div>
+        
+        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; font-size: 0.9rem;">
+            <p style="color: #aaa; margin-bottom: 0.5rem;">测试账号：</p>
+            <p>racing_king / user123</p>
+            <p>speed_demon / pass123</p>
+            <p>admin / admin123</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

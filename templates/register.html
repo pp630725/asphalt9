@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 2rem auto;">
+    <div class="card">
+        <h1 style="text-align: center; margin-bottom: 2rem;">✨ 用户注册</h1>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">用户名 *</label>
+                <input type="text" id="username" name="username" required placeholder="请输入用户名">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码 *</label>
+                <input type="password" id="password" name="password" required placeholder="请输入密码">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" id="email" name="email" placeholder="请输入邮箱（选填）">
+            </div>
+            
+            <div style="background: rgba(40, 167, 69, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                🎁 注册即送 1000 金币！
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                注册
+            </button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 1.5rem; color: #888;">
+            已有账号？<a href="{{ url_for('login') }}" style="color: #e94560;">立即登录</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

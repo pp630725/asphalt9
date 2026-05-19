@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}发布账号 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block extra_style %}
+<style>
+    .upload-container {
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .upload-container:hover {
+        border-color: #e94560;
+        background: rgba(233, 69, 96, 0.1);
+    }
+    
+    .upload-container.dragover {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.1);
+    }
+    
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .preview-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .preview-item .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 28px;
+        height: 28px;
+        background: rgba(220, 53, 69, 0.9);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+    
+    .upload-count {
+        color: #888;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .upload-hint {
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .upload-container {
+            padding: 1.5rem;
+            min-height: 100px;
+        }
+        
+        .preview-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
+        }
+        
+        .preview-item .remove-btn {
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <h1 class="section-title">发布游戏账号</h1>
+    
+    <div class="card">
+        <form method="POST" enctype="multipart/form-data" id="sellForm">
+            <div class="form-group">
+                <label for="title">账号标题 *</label>
+                <input type="text" id="title" name="title" required placeholder="例如：满级VIP账号">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">账号描述</label>
+                <textarea id="description" name="description" rows="4" placeholder="详细描述账号情况，包括优势、特点等"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="level">游戏等级 *</label>
+                    <input type="number" id="level" name="level" required min="1" placeholder="例如：100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cars_count">赛车数量 *</label>
+                    <input type="number" id="cars_count" name="cars_count" required min="0" placeholder="例如：50">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="price">价格（金币）*</label>
+                <input type="number" id="price" name="price" required min="1" step="0.01" placeholder="例如：999.99">
+            </div>
+            
+            <!-- 图片上传区域 -->
+            <div class="form-group">
+                <label>账号图片（最多9张）</label>
+                <div class="upload-container" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
+                    <div>点击选择图片</div>
+                    <div class="upload-hint">支持 JPG、PNG、GIF、WebP</div>
+                </div>
+                <input type="file" id="imageInput" name="images" multiple accept="image/*" style="display: none;" onchange="handleFiles(this.files)">
+                <div class="upload-count" id="uploadCount">已选择 0 / 9 张图片</div>
+                <div class="preview-grid" id="previewGrid"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="image_desc">图片描述</label>
+                <textarea id="image_desc" name="image_desc" rows="2" placeholder="补充说明图片内容（可选）"></textarea>
+            </div>
+            
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary">
+                    🚀 发布账号
+                </button>
+                <a href="{{ url_for('accounts') }}" class="btn btn-secondary">
+                    取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .btn-row {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn-row .btn {
+        flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        
+        .btn-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-row .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+
+<script>
+let selectedFiles = [];
+
+function handleFiles(files) {
+    const maxImages = 9;
+    const remaining = maxImages - selectedFiles.length;
+    const filesToAdd = Array.from(files).slice(0, remaining);
+    
+    selectedFiles = selectedFiles.concat(filesToAdd);
+    updatePreview();
+    updateFileInput();
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updatePreview();
+    updateFileInput();
+}
+
+function updatePreview() {
+    const grid = document.getElementById('previewGrid');
+    const count = document.getElementById('uploadCount');
+    
+    count.textContent = `已选择 ${selectedFiles.length} / 9 张图片`;
+    
+    grid.innerHTML = '';
+    selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${e.target.result}" alt="预览">
+                <button type="button" class="remove-btn" onclick="removeFile(${index})">×</button>
+            `;
+            grid.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function updateFileInput() {
+    const input = document.getElementById('imageInput');
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    input.files = dt.files;
+}
+
+// 拖拽上传
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+});
+</script>
+{% endblock %}
