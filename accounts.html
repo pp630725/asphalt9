@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}账号市场 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block content %}
+<h1 class="section-title">🎮 账号市场</h1>
+
+{% if not user %}
+<div class="visitor-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h4 style="margin: 0 0 0.25rem 0; color: white;">👋 游客您好！</h4>
+        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 0.9rem;">您可以自由浏览所有账号，无需注册</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="{{ url_for('login') }}" class="btn" style="background: white; color: #667eea;">🔑 登录</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary" style="border-color: white; color: white;">📝 注册</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- 广告位2：账号市场顶部 -->
+<div class="ad-banner wide" style="margin-bottom: 1.5rem;">
+    <span class="ad-icon">📢</span>
+    <span class="ad-title">广告位招租</span>
+    <span class="ad-subtitle">联系方式：联系管理员开通</span>
+</div>
+
+{% if accounts %}
+<div class="grid">
+    {% for account in accounts %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <span class="badge badge-{{ account.status }}">{{ '可售' if account.status == 'available' else '已售' }}</span>
+            <span style="color: #888;">Lv.{{ account.level }}</span>
+        </div>
+        <h3 style="margin-bottom: 0.5rem;">{{ account.title }}</h3>
+        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1rem;">
+            {{ account.description[:80] if account.description else '暂无描述' }}...
+        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span>🚗 {{ account.cars_count }} 辆赛车</span>
+            <span class="price price-small">{{ account.price }} 金币</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #888; font-size: 0.85rem;">卖家: {{ account.seller_name }}</span>
+            <a href="{{ url_for('account_detail', account_id=account.id) }}" class="btn btn-{{ 'primary' if account.status == 'available' else 'secondary' }}" style="padding: 0.5rem 1rem;">
+                {{ '查看详情' if account.status == 'available' else '已售出' }}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 4rem;">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">😢</div>
+    <h2 style="margin-bottom: 1rem;">暂无在售账号</h2>
+    <p style="color: #aaa; margin-bottom: 1.5rem;">成为第一个发布账号的用户吧！</p>
+    {% if user %}
+    <a href="{{ url_for('sell_account') }}" class="btn btn-primary">发布账号</a>
+    {% else %}
+    <a href="{{ url_for('login') }}" class="btn btn-primary">登录后发布</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

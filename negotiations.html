@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}议价管理 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block extra_style %}
+<style>
+    @media (max-width: 768px) {
+        .negotiation-info-row {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .negotiation-info-row span:first-child {
+            font-size: 0.85rem;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-group form {
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            width: 100%;
+        }
+        
+        .counter-form {
+            flex-direction: column;
+        }
+        
+        .counter-form input {
+            min-height: 48px;
+        }
+        
+        .counter-form .btn {
+            width: 100%;
+        }
+    }
+    
+    /* 保险选项样式 */
+    .insurance-option {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin: 0.75rem 0;
+        color: white;
+    }
+    
+    .insurance-option label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .insurance-option input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #ffd700;
+    }
+    
+    .insurance-amount {
+        color: #ffd700;
+        font-weight: bold;
+    }
+    
+    .negotiation-total {
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        margin-top: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .negotiation-total .value {
+        color: #ffd700;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="section-title">📝 议价管理</h1>
+
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+    <a href="{{ url_for('my_accounts') }}" class="btn btn-secondary">← 我的账号</a>
+</div>
+
+<!-- 我收到的议价 -->
+<section style="margin-bottom: 3rem;">
+    <h2 class="section-title">📥 收到的议价</h2>
+    {% if my_received_negotiations %}
+    <div class="grid">
+        {% for neg in my_received_negotiations %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h3>{{ neg.account_title }}</h3>
+                <span class="badge badge-{{ 'available' if neg.status == 'pending' else 'warning' }}">
+                    {{ '待处理' if neg.status == 'pending' else '已还价' }}
+                </span>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #888;">买家：</span>
+                    <span>{{ neg.buyer_name }}</span>
+                </div>
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #888;">原始价格：</span>
+                    <span class="price-small">{{ neg.original_price }} 金币</span>
+                </div>
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #888;">买家出价：</span>
+                    <span style="color: #28a745; font-weight: bold;">{{ neg.offered_price }} 金币</span>
+                </div>
+                {% if neg.counter_price %}
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between;">
+                    <span style="color: #888;">您的还价：</span>
+                    <span style="color: #ffc107; font-weight: bold;">{{ neg.counter_price }} 金币</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div style="color: #888; font-size: 0.85rem; margin-bottom: 1rem;">
+                时间: {{ neg.created_at }}
+            </div>
+            
+            {% if neg.status == 'pending' %}
+            <div class="btn-group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <form action="{{ url_for('accept_negotiation', negotiation_id=neg.id) }}" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        ✅ 接受
+                    </button>
+                </form>
+                <form action="{{ url_for('reject_negotiation', negotiation_id=neg.id) }}" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn btn-secondary">
+                        ❌ 拒绝
+                    </button>
+                </form>
+            </div>
+            <form action="{{ url_for('counter_negotiation', negotiation_id=neg.id) }}" method="POST" class="counter-form" style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                <input type="number" name="counter_price" placeholder="输入还价金额" required min="1" style="flex: 1;">
+                <button type="submit" class="btn btn-secondary">
+                    💬 还价
+                </button>
+            </form>
+            {% else %}
+            <div class="btn-group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <form action="{{ url_for('accept_negotiation', negotiation_id=neg.id) }}" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        ✅ 接受还价
+                    </button>
+                </form>
+                <form action="{{ url_for('reject_negotiation', negotiation_id=neg.id) }}" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn btn-secondary">
+                        ❌ 拒绝
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <p style="color: #888;">您还没有收到任何议价</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- 我发出的议价 -->
+<section>
+    <h2 class="section-title">📤 我发出的议价</h2>
+    {% if my_sent_negotiations %}
+    <div class="grid">
+        {% for neg in my_sent_negotiations %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h3>{{ neg.account_title }}</h3>
+                <span class="badge badge-{{ 
+                    'available' if neg.status == 'pending' else 
+                    'warning' if neg.status == 'countered' else
+                    'danger' if neg.status in ('rejected', 'cancelled') else
+                    'sold' if neg.status == 'accepted' else 'secondary'
+                }}">
+                    {% if neg.status == 'pending' %}等待回复
+                    {% elif neg.status == 'countered' %}卖家还价
+                    {% elif neg.status == 'accepted' %}已成交
+                    {% elif neg.status == 'rejected' %}已拒绝
+                    {% elif neg.status == 'cancelled' %}已取消
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #888;">卖家：</span>
+                    <span>{{ neg.seller_name }}</span>
+                </div>
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #888;">原始价格：</span>
+                    <span>{{ neg.original_price }} 金币</span>
+                </div>
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: #888;">您的出价：</span>
+                    <span style="color: #28a745; font-weight: bold;">{{ neg.offered_price }} 金币</span>
+                </div>
+                {% if neg.counter_price %}
+                <div class="negotiation-info-row" style="display: flex; justify-content: space-between;">
+                    <span style="color: #888;">卖家还价：</span>
+                    <span style="color: #ffc107; font-weight: bold;">{{ neg.counter_price }} 金币</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div style="color: #888; font-size: 0.85rem; margin-bottom: 1rem;">
+                时间: {{ neg.created_at }}
+            </div>
+            
+            {% if neg.status == 'pending' %}
+            <form action="{{ url_for('cancel_negotiation', negotiation_id=neg.id) }}" method="POST">
+                <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                    取消议价
+                </button>
+            </form>
+            {% elif neg.status == 'countered' %}
+            <div class="insurance-option">
+                <label>
+                    <input type="checkbox" name="buy_insurance" value="1" onchange="updateNegTotal(this, {{ neg.counter_price }})">
+                    <span>🛡️ 购买找回保险 (+<span class="insurance-amount">{{ (neg.counter_price * 0.1)|round(2) }}</span> 金币)</span>
+                </label>
+            </div>
+            <div class="negotiation-total">
+                <span>实付金额：</span>
+                <span class="value" data-base="{{ neg.counter_price }}">{{ neg.counter_price }} 金币</span>
+            </div>
+            <div class="btn-group" style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                <form action="{{ url_for('buy_from_negotiation', negotiation_id=neg.id) }}" method="POST" id="negForm{{ neg.id }}" style="flex: 1;">
+                    <input type="hidden" name="buy_insurance" id="insInput{{ neg.id }}" value="">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" onclick="prepareInsurance('{{ neg.id }}')">
+                        ✅ 接受还价购买
+                    </button>
+                </form>
+                <form action="{{ url_for('cancel_negotiation', negotiation_id=neg.id) }}" method="POST" style="flex: 1;">
+                    <button type="submit" class="btn btn-secondary">
+                        拒绝
+                    </button>
+                </form>
+            </div>
+            <script>
+            function updateNegTotal(checkbox, basePrice) {
+                var insurance = {{ (neg.counter_price * 0.1)|round(2) }};
+                var total = checkbox.checked ? basePrice + insurance : basePrice;
+                checkbox.closest('.card').querySelector('.negotiation-total .value').textContent = total + ' 金币';
+            }
+            function prepareInsurance(negId) {
+                var checkbox = document.querySelector('#negForm' + negId + ' input[name="buy_insurance"]');
+                var hiddenInput = document.getElementById('insInput' + negId);
+                hiddenInput.value = checkbox.checked ? '1' : '';
+            }
+            </script>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <p style="color: #888;">您还没有发出任何议价</p>
+        <a href="{{ url_for('accounts') }}" class="btn btn-primary" style="margin-top: 1rem;">去市场看看</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

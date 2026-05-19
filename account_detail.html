@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+
+{% block title %}{{ account.title }} - 狂野飙车9账号交易平台{% endblock %}
+
+{% block extra_style %}
+<style>
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-info {
+        flex: 1;
+    }
+    
+    .stat-label {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    /* 图片画廊 */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .gallery-item {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .gallery-item:hover {
+        transform: scale(1.05);
+    }
+    
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .gallery-item.more {
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
+    }
+    
+    /* 图片灯箱 */
+    .lightbox {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .lightbox.active {
+        display: flex;
+    }
+    
+    .lightbox img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+    }
+    
+    .lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-size: 2rem;
+        color: white;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+    
+    .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3rem;
+        color: white;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 1rem;
+    }
+    
+    .lightbox-prev { left: 20px; }
+    .lightbox-next { right: 20px; }
+    
+    /* 移动端优化 */
+    @media (max-width: 768px) {
+        .stat-item {
+            flex-direction: column;
+            text-align: center;
+            padding: 0.75rem;
+        }
+        
+        .gallery-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.3rem;
+        }
+        
+        .lightbox-nav {
+            font-size: 2rem;
+            padding: 0.5rem;
+        }
+        
+        .lightbox-prev { left: 5px; }
+        .lightbox-next { right: 5px; }
+    }
+    
+    /* 保险选项样式 */
+    .insurance-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        color: white;
+    }
+    
+    .insurance-box input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #ffd700;
+    }
+    
+    .insurance-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .insurance-info .shield-icon {
+        font-size: 1.5rem;
+    }
+    
+    .insurance-price {
+        font-weight: bold;
+        color: #ffd700;
+    }
+    
+    .insurance-desc {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.8);
+        margin-top: 0.5rem;
+    }
+    
+    .total-price-box {
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .total-price-box .label {
+        color: #ccc;
+    }
+    
+    .total-price-box .value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #ffd700;
+    }
+    
+    .visitor-notice {
+        background: rgba(255, 193, 7, 0.15);
+        border: 1px dashed rgba(255, 193, 7, 0.5);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    .visitor-notice p {
+        color: #ffc107;
+        margin-bottom: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('accounts') }}" style="color: #aaa; text-decoration: none; margin-bottom: 1rem; display: inline-block;">
+    ← 返回账号市场
+</a>
+
+<div class="detail-grid">
+    <!-- 左侧详情 -->
+    <div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h1 style="font-size: 1.8rem;">{{ account.title }}</h1>
+                <span class="badge badge-{{ account.status }}">{{ '可售' if account.status == 'available' else '已售' }}</span>
+            </div>
+            
+            <div class="stat-item">
+                <span class="stat-icon">🏆</span>
+                <div class="stat-info">
+                    <div class="stat-label">游戏等级</div>
+                    <div class="stat-value">Lv.{{ account.level }}</div>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <span class="stat-icon">🚗</span>
+                <div class="stat-info">
+                    <div class="stat-label">赛车数量</div>
+                    <div class="stat-value">{{ account.cars_count }} 辆</div>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <span class="stat-icon">👤</span>
+                <div class="stat-info">
+                    <div class="stat-label">卖家</div>
+                    <div class="stat-value">{{ account.seller_name }}</div>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <span class="stat-icon">📅</span>
+                <div class="stat-info">
+                    <div class="stat-label">发布时间</div>
+                    <div class="stat-value">{{ account.created_at }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 账号描述 -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">📝 账号描述</h3>
+            <p style="color: #ccc; line-height: 1.8;">
+                {{ account.description if account.description else '暂无详细描述' }}
+            </p>
+        </div>
+        
+        <!-- 图片画廊 -->
+        {% if account.images %}
+        {% set image_list = account.images.split(',') %}
+        {% if image_list and image_list[0] %}
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 0.5rem;">📷 账号图片 ({{ image_list|length }})</h3>
+            <div class="gallery-grid">
+                {% for img in image_list[:9] %}
+                <div class="gallery-item" onclick="openLightbox({{ loop.index0 }})">
+                    <img src="{{ url_for('static', filename='uploads/' + img) }}" alt="账号图片 {{ loop.index }}">
+                </div>
+                {% endfor %}
+                {% if image_list|length > 9 %}
+                <div class="gallery-item more">+{{ image_list|length - 9 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        
+        <!-- 截图描述 -->
+        {% if account.image_desc %}
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">📸 图片说明</h3>
+            <p style="color: #ccc; line-height: 1.8;">
+                {{ account.image_desc }}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 灯箱 -->
+    {% if account.images %}
+    {% set image_list = account.images.split(',') %}
+    <div class="lightbox" id="lightbox" onclick="handleLightboxClick(event)">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <button class="lightbox-nav lightbox-prev" onclick="prevImage()">‹</button>
+        <img id="lightbox-img" src="" alt="" style="touch-action: pan-y pinch-zoom;">
+        <button class="lightbox-nav lightbox-next" onclick="nextImage()">›</button>
+        <div id="lightbox-counter" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 1rem;"></div>
+    </div>
+    <script>
+        const images = {{ image_list|tojson }};
+        let currentIndex = 0;
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        function openLightbox(index) {
+            currentIndex = index;
+            document.getElementById('lightbox-img').src = '/static/uploads/' + images[currentIndex];
+            document.getElementById('lightbox').classList.add('active');
+            updateCounter();
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+        
+        function prevImage() {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            document.getElementById('lightbox-img').src = '/static/uploads/' + images[currentIndex];
+            updateCounter();
+        }
+        
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % images.length;
+            document.getElementById('lightbox-img').src = '/static/uploads/' + images[currentIndex];
+            updateCounter();
+        }
+        
+        function updateCounter() {
+            const counter = document.getElementById('lightbox-counter');
+            if (counter) counter.textContent = (currentIndex + 1) + ' / ' + images.length;
+        }
+        
+        function handleLightboxClick(e) {
+            if (e.target.id === 'lightbox' || e.target.id === 'lightbox-img') {
+                closeLightbox();
+            }
+        }
+        
+        // 触摸滑动支持
+        document.getElementById('lightbox').addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        document.getElementById('lightbox').addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    nextImage();
+                } else {
+                    prevImage();
+                }
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('lightbox').classList.contains('active')) {
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowLeft') prevImage();
+                if (e.key === 'ArrowRight') nextImage();
+            }
+        });
+    </script>
+    {% endif %}
+    
+    <!-- 右侧购买 -->
+    <div>
+        <div class="card" style="position: sticky; top: 100px;">
+            <h2 style="margin-bottom: 1rem;">💰 价格</h2>
+            <div class="price" style="font-size: 2.5rem; margin-bottom: 1.5rem;">
+                {{ account.price }} 金币
+            </div>
+            
+            {% if user %}
+                {% if is_owner %}
+                    <div style="background: rgba(255, 193, 7, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                        这是您发布的账号
+                    </div>
+                    <a href="{{ url_for('my_accounts') }}" class="btn btn-secondary" style="width: 100%;">
+                        查看我的账号
+                    </a>
+                {% elif is_sold %}
+                    <div style="background: rgba(220, 53, 69, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                        该账号已售出
+                    </div>
+                {% else %}
+                    <div style="background: rgba(40, 167, 69, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                        您的余额: 💰 {{ user.balance }} 金币
+                    </div>
+                    {% if user.balance >= account.price %}
+                        <form action="{{ url_for('buy_account', account_id=account.id) }}" method="POST" id="buyForm">
+                            <!-- 保险选项 -->
+                            <div class="insurance-box">
+                                <div class="insurance-info">
+                                    <span class="shield-icon">🛡️</span>
+                                    <span>购买找回保险</span>
+                                    <span class="insurance-price">+{{ (account.price * 0.1)|round(2) }} 金币</span>
+                                </div>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="buy_insurance" id="insuranceCheckbox" value="1" onchange="updateTotalPrice()">
+                                    <span>是的，我需要安全保障</span>
+                                </label>
+                                <p class="insurance-desc">
+                                    📌 开通保险后，如账号被卖家找回，我们将赔付您账号价格的100%，让您的交易更安心！
+                                </p>
+                            </div>
+                            
+                            <!-- 总价显示 -->
+                            <div class="total-price-box">
+                                <span class="label">实付金额：</span>
+                                <span class="value" id="totalPrice">{{ account.price }} 金币</span>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem; margin-top: 1rem;">
+                                🛒 立即购买
+                            </button>
+                        </form>
+                        
+                        <script>
+                            var accountPrice = {{ account.price }};
+                            var insuranceAmount = {{ (account.price * 0.1)|round(2) }};
+                            var userBalance = {{ user.balance }};
+                            
+                            function updateTotalPrice() {
+                                var checkbox = document.getElementById('insuranceCheckbox');
+                                var totalDisplay = document.getElementById('totalPrice');
+                                var buyButton = document.querySelector('#buyForm button[type="submit"]');
+                                
+                                var total = checkbox.checked ? accountPrice + insuranceAmount : accountPrice;
+                                totalDisplay.textContent = total + ' 金币';
+                                
+                                if (total > userBalance) {
+                                    totalDisplay.style.color = '#dc3545';
+                                    buyButton.disabled = true;
+                                    buyButton.textContent = '💎 余额不足，立即充值';
+                                    buyButton.onclick = function() { window.location.href = '{{ url_for('recharge') }}'; };
+                                } else {
+                                    totalDisplay.style.color = '#ffd700';
+                                    buyButton.disabled = false;
+                                    buyButton.textContent = '🛒 立即购买';
+                                    buyButton.onclick = null;
+                                }
+                            }
+                            
+                            // 初始化检查
+                            updateTotalPrice();
+                        </script>
+                    {% else %}
+                        <div style="background: rgba(220, 53, 69, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+                            余额不足！需要 {{ (account.price * 1.1)|round(2) }} 金币（含保险）<br>
+                            您只有 {{ user.balance }} 金币
+                        </div>
+                        <a href="{{ url_for('recharge') }}" class="btn btn-primary" style="width: 100%;">
+                            💎 立即充值
+                        </a>
+                    {% endif %}
+                {% endif %}
+                
+                <!-- 议价表单 -->
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="margin-bottom: 0.5rem; color: #ffc107;">💬 议价功能</h4>
+                        <form action="{{ url_for('negotiate', account_id=account.id) }}" method="POST">
+                            <div class="form-group" style="margin-bottom: 0.5rem;">
+                                <input type="number" name="offered_price" placeholder="输入您的出价" required min="1" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff;">
+                            </div>
+                            <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                                💬 提交议价
+                            </button>
+                        </form>
+                        <p style="color: #888; font-size: 0.85rem; margin-top: 0.5rem; text-align: center;">
+                            议价后可在"我的议价"中查看进度
+                        </p>
+                    </div>
+            {% else %}
+                <div class="visitor-notice">
+                    <p>👋 游客您好！您可以自由浏览所有账号</p>
+                    <p style="font-size: 0.85rem; color: #888; margin-bottom: 0;">登录后可购买账号或发布自己的账号</p>
+                </div>
+                <a href="{{ url_for('login') }}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    🔑 登录购买
+                </a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
+                    📝 注册账号
+                </a>
+            {% endif %}
+        </div>
+        
+        <!-- 广告位3：账号详情页侧边栏 -->
+        <div class="ad-banner square" style="margin-top: 1rem;">
+            <span class="ad-icon">📢</span>
+            <span class="ad-title">广告位招租</span>
+            <span class="ad-subtitle">联系方式：联系管理员开通</span>
+        </div>
+        
+        <!-- 广告位4：账号详情页底部 -->
+        <div class="ad-banner wide" style="margin-top: 1rem;">
+            <span class="ad-icon">📢</span>
+            <span class="ad-title">广告位招租</span>
+            <span class="ad-subtitle">联系方式：联系管理员开通</span>
+        </div>
+    </div>
+{% endblock %}

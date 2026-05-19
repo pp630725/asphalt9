@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}我的账号 - 狂野飙车9账号交易平台{% endblock %}
+
+{% block content %}
+<h1 class="section-title">我的账号中心</h1>
+
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+    <a href="{{ url_for('sell_account') }}" class="btn btn-primary">
+        ➕ 发布新账号
+    </a>
+    <a href="{{ url_for('recharge') }}" class="btn btn-secondary">
+        💎 充值金币
+    </a>
+</div>
+
+<!-- 我发布的账号 -->
+<section style="margin-bottom: 3rem;">
+    <h2 class="section-title">📤 我发布的账号</h2>
+    {% if my_accounts %}
+    <div class="grid">
+        {% for account in my_accounts %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <span class="badge badge-{{ account.status }}">{{ '可售' if account.status == 'available' else '已售' }}</span>
+                <span style="color: #888;">Lv.{{ account.level }}</span>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">{{ account.title }}</h3>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1rem;">
+                {{ account.description[:60] if account.description else '暂无描述' }}...
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span>🚗 {{ account.cars_count }} 辆</span>
+                <span class="price price-small">{{ account.price }} 金币</span>
+            </div>
+            <div style="color: #888; font-size: 0.85rem;">
+                发布时间: {{ account.created_at }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <p style="color: #888;">您还没有发布任何账号</p>
+        <a href="{{ url_for('sell_account') }}" class="btn btn-primary" style="margin-top: 1rem;">发布第一个账号</a>
+    </div>
+    {% endif %}
+</section>
+
+<!-- 我购买的账号 -->
+<section>
+    <h2 class="section-title">📥 我购买的账号</h2>
+    {% if bought_accounts %}
+    <div class="grid">
+        {% for account in bought_accounts %}
+        <div class="card" style="border: 2px solid rgba(40, 167, 69, 0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <span class="badge badge-sold">已购</span>
+                <span style="color: #888;">Lv.{{ account.level }}</span>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">{{ account.title }}</h3>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1rem;">
+                {{ account.description[:60] if account.description else '暂无描述' }}...
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span>🚗 {{ account.cars_count }} 辆</span>
+                <span class="price price-small">{{ account.price }} 金币</span>
+            </div>
+            <div style="color: #28a745; font-size: 0.85rem;">
+                购买时间: {{ account.bought_at }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <p style="color: #888;">您还没有购买任何账号</p>
+        <a href="{{ url_for('accounts') }}" class="btn btn-primary" style="margin-top: 1rem;">去市场看看</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
