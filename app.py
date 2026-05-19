@@ -2,7 +2,6 @@
 狂野飙车9游戏账号交易平台
 主应用文件
 """
-import sqlite3
 import os
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
@@ -11,9 +10,6 @@ from werkzeug.utils import secure_filename
 from database import get_db, init_db, add_negotiations_table, add_images_column, add_insurance_column
 
 app = Flask(__name__)
-app.secret_key = 'asphalt9_trading_secret_key_2024'
-
-DATABASE = 'trading_platform.db'
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_IMAGES = 9
@@ -41,7 +37,7 @@ def get_current_user():
     if 'user_id' in session:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
+        cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
         user = cursor.fetchone()
         conn.close()
         return user
@@ -112,7 +108,7 @@ def account_detail(account_id):
         SELECT a.*, u.username as seller_name, u.email as seller_email
         FROM accounts a 
         JOIN users u ON a.seller_id = u.id 
-        WHERE a.id = ?
+        WHERE a.id = %s
     ''', (account_id,))
     account = cursor.fetchone()
     conn.close()
@@ -165,7 +161,7 @@ def sell_account():
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO accounts (seller_id, title, description, level, cars_count, price, image_desc, images)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ''', (session['user_id'], title, description, level, cars_count, price, image_desc, images_str))
         conn.commit()
         conn.close()
@@ -184,7 +180,7 @@ def my_accounts():
     
     # 我发布的账号
     cursor.execute('''
-        SELECT * FROM accounts WHERE seller_id = ? ORDER BY created_at DESC
+        SELECT * FROM accounts WHERE seller_id = %s ORDER BY created_at DESC
     ''', (session['user_id'],))
     my_accounts = cursor.fetchall()
     
@@ -193,7 +189,7 @@ def my_accounts():
         SELECT a.*, t.created_at as bought_at
         FROM transactions t
         JOIN accounts a ON t.account_id = a.id
-        WHERE t.buyer_id = ?
+        WHERE t.buyer_id = %s
     ''', (session['user_id'],))
     bought_accounts = cursor.fetchall()
     
@@ -211,7 +207,7 @@ def buy_account(account_id):
     cursor = conn.cursor()
     
     # 获取账号信息
-    cursor.execute('SELECT * FROM accounts WHERE id = ?', (account_id,))
+    cursor.execute('SELECT * FROM accounts WHERE id = %s', (account_id,))
     account = cursor.fetchone()
     
     if not account:
@@ -230,7 +226,7 @@ def buy_account(account_id):
         return redirect(url_for('account_detail', account_id=account_id))
     
     # 获取买家信息
-    cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
+    cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
     buyer = cursor.fetchone()
     
     # 检查是否购买保险
@@ -250,19 +246,19 @@ def buy_account(account_id):
     try:
         # 扣除买家余额
         new_balance = buyer['balance'] - total_price
-        cursor.execute('UPDATE users SET balance = ? WHERE id = ?', 
+        cursor.execute('UPDATE users SET balance = %s WHERE id = %s', 
                        (new_balance, session['user_id']))
         
         # 给卖家增加余额（不含保险费）
-        cursor.execute('UPDATE users SET balance = balance + ? WHERE id = ?',
+        cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s',
                        (account['price'], account['seller_id']))
         
         # 更新账号状态
-        cursor.execute('UPDATE accounts SET status = ? WHERE id = ?',
+        cursor.execute('UPDATE accounts SET status = %s WHERE id = %s',
                        ('sold', account_id))
         
         # 创建交易记录（包含保险信息）
-        cursor.execute('INSERT INTO transactions (buyer_id, account_id, price, insurance) VALUES (?, ?, ?, ?)',
+        cursor.execute('INSERT INTO transactions (buyer_id, account_id, price, insurance) VALUES (%s, %s, %s, %s)',
                        (session['user_id'], account_id, account['price'], insurance_amount))
         
         conn.commit()
@@ -292,7 +288,7 @@ def recharge():
         
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('UPDATE users SET balance = balance + ? WHERE id = ?',
+        cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s',
                        (amount, session['user_id']))
         conn.commit()
         conn.close()
@@ -312,7 +308,7 @@ def login():
         
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
         user = cursor.fetchone()
         conn.close()
         
@@ -341,7 +337,7 @@ def register():
         cursor = conn.cursor()
         
         # 检查用户名是否已存在
-        cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+        cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
         if cursor.fetchone():
             conn.close()
             flash('用户名已存在！', 'danger')
@@ -350,7 +346,7 @@ def register():
         # 创建新用户
         password_hash = generate_password_hash(password)
         cursor.execute(
-            'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
+            'INSERT INTO users (username, password, email) VALUES (%s, %s, %s)',
             (username, password_hash, email)
         )
         conn.commit()
@@ -383,7 +379,7 @@ def negotiate(account_id):
     cursor = conn.cursor()
     
     # 检查账号是否存在且可售
-    cursor.execute('SELECT * FROM accounts WHERE id = ?', (account_id,))
+    cursor.execute('SELECT * FROM accounts WHERE id = %s', (account_id,))
     account = cursor.fetchone()
     
     if not account:
@@ -404,7 +400,7 @@ def negotiate(account_id):
     # 检查是否有待处理的议价
     cursor.execute('''
         SELECT * FROM negotiations 
-        WHERE account_id = ? AND buyer_id = ? AND status = 'pending'
+        WHERE account_id = %s AND buyer_id = %s AND status = 'pending'
     ''', (account_id, session['user_id']))
     if cursor.fetchone():
         conn.close()
@@ -414,7 +410,7 @@ def negotiate(account_id):
     # 创建议价记录
     cursor.execute('''
         INSERT INTO negotiations (account_id, buyer_id, offered_price, status)
-        VALUES (?, ?, ?, 'pending')
+        VALUES (%s, %s, %s, 'pending')
     ''', (account_id, session['user_id'], offered_price))
     conn.commit()
     conn.close()
@@ -436,7 +432,7 @@ def my_negotiations():
         FROM negotiations n
         JOIN accounts a ON n.account_id = a.id
         JOIN users u ON a.seller_id = u.id
-        WHERE n.buyer_id = ?
+        WHERE n.buyer_id = %s
         ORDER BY n.created_at DESC
     ''', (session['user_id'],))
     my_sent_negotiations = cursor.fetchall()
@@ -448,7 +444,7 @@ def my_negotiations():
         FROM negotiations n
         JOIN accounts a ON n.account_id = a.id
         JOIN users u ON n.buyer_id = u.id
-        WHERE a.seller_id = ? AND n.status IN ('pending', 'countered')
+        WHERE a.seller_id = %s AND n.status IN ('pending', 'countered')
         ORDER BY n.created_at DESC
     ''', (session['user_id'],))
     my_received_negotiations = cursor.fetchall()
@@ -471,7 +467,7 @@ def accept_negotiation(negotiation_id):
         SELECT n.*, a.seller_id, a.price as original_price, a.title
         FROM negotiations n
         JOIN accounts a ON n.account_id = a.id
-        WHERE n.id = ?
+        WHERE n.id = %s
     ''', (negotiation_id,))
     negotiation = cursor.fetchone()
     
@@ -497,7 +493,7 @@ def accept_negotiation(negotiation_id):
         final_price = negotiation['offered_price']
     
     # 获取买家信息
-    cursor.execute('SELECT * FROM users WHERE id = ?', (negotiation['buyer_id'],))
+    cursor.execute('SELECT * FROM users WHERE id = %s', (negotiation['buyer_id'],))
     buyer = cursor.fetchone()
     
     if buyer['balance'] < final_price:
@@ -508,29 +504,29 @@ def accept_negotiation(negotiation_id):
     # 执行交易
     try:
         # 扣除买家余额
-        cursor.execute('UPDATE users SET balance = balance - ? WHERE id = ?',
+        cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s',
                        (final_price, negotiation['buyer_id']))
         
         # 给卖家增加余额
-        cursor.execute('UPDATE users SET balance = balance + ? WHERE id = ?',
+        cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s',
                        (final_price, negotiation['seller_id']))
         
         # 更新账号状态
-        cursor.execute('UPDATE accounts SET status = ? WHERE id = ?',
+        cursor.execute('UPDATE accounts SET status = %s WHERE id = %s',
                        ('sold', negotiation['account_id']))
         
         # 更新议价状态
-        cursor.execute('UPDATE negotiations SET status = ? WHERE id = ?',
+        cursor.execute('UPDATE negotiations SET status = %s WHERE id = %s',
                        ('accepted', negotiation_id))
         
         # 拒绝该账号的其他议价
         cursor.execute('''
             UPDATE negotiations SET status = 'rejected'
-            WHERE account_id = ? AND id != ? AND status = 'pending'
+            WHERE account_id = %s AND id != %s AND status = 'pending'
         ''', (negotiation['account_id'], negotiation_id))
         
         # 创建交易记录
-        cursor.execute('INSERT INTO transactions (buyer_id, account_id, price) VALUES (?, ?, ?)',
+        cursor.execute('INSERT INTO transactions (buyer_id, account_id, price) VALUES (%s, %s, %s)',
                        (negotiation['buyer_id'], negotiation['account_id'], final_price))
         
         conn.commit()
@@ -554,7 +550,7 @@ def reject_negotiation(negotiation_id):
         SELECT n.*, a.seller_id
         FROM negotiations n
         JOIN accounts a ON n.account_id = a.id
-        WHERE n.id = ?
+        WHERE n.id = %s
     ''', (negotiation_id,))
     negotiation = cursor.fetchone()
     
@@ -568,8 +564,8 @@ def reject_negotiation(negotiation_id):
         flash('无权操作！', 'danger')
         return redirect(url_for('my_negotiations'))
     
-    cursor.execute('UPDATE negotiations SET status = ? WHERE id = ?',
-                   ('rejected', negotiation_id))
+        cursor.execute('UPDATE negotiations SET status = %s WHERE id = %s',
+                       ('rejected', negotiation_id))
     conn.commit()
     conn.close()
     
@@ -593,7 +589,7 @@ def counter_negotiation(negotiation_id):
         SELECT n.*, a.seller_id, a.price as original_price
         FROM negotiations n
         JOIN accounts a ON n.account_id = a.id
-        WHERE n.id = ?
+        WHERE n.id = %s
     ''', (negotiation_id,))
     negotiation = cursor.fetchone()
     
@@ -613,8 +609,8 @@ def counter_negotiation(negotiation_id):
         return redirect(url_for('my_negotiations'))
     
     cursor.execute('''
-        UPDATE negotiations SET counter_price = ?, status = 'countered', updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+        UPDATE negotiations SET counter_price = %s, status = 'countered', updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
     ''', (counter_price, negotiation_id))
     conn.commit()
     conn.close()
@@ -629,7 +625,7 @@ def cancel_negotiation(negotiation_id):
     conn = get_db()
     cursor = conn.cursor()
     
-    cursor.execute('SELECT * FROM negotiations WHERE id = ?', (negotiation_id,))
+    cursor.execute('SELECT * FROM negotiations WHERE id = %s', (negotiation_id,))
     negotiation = cursor.fetchone()
     
     if not negotiation:
@@ -647,8 +643,8 @@ def cancel_negotiation(negotiation_id):
         flash('该议价已处理！', 'warning')
         return redirect(url_for('my_negotiations'))
     
-    cursor.execute('UPDATE negotiations SET status = ? WHERE id = ?',
-                   ('cancelled', negotiation_id))
+        cursor.execute('UPDATE negotiations SET status = %s WHERE id = %s',
+                       ('cancelled', negotiation_id))
     conn.commit()
     conn.close()
     
@@ -666,7 +662,7 @@ def buy_from_negotiation(negotiation_id):
         SELECT n.*, a.seller_id, a.title, a.price as original_price
         FROM negotiations n
         JOIN accounts a ON n.account_id = a.id
-        WHERE n.id = ?
+        WHERE n.id = %s
     ''', (negotiation_id,))
     negotiation = cursor.fetchone()
     
@@ -692,7 +688,7 @@ def buy_from_negotiation(negotiation_id):
     insurance_amount = round(final_price * 0.1, 2) if buy_insurance else 0
     total_price = final_price + insurance_amount
     
-    cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
+    cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
     buyer = cursor.fetchone()
     
     if buyer['balance'] < total_price:
@@ -705,25 +701,25 @@ def buy_from_negotiation(negotiation_id):
     
     # 执行交易
     try:
-        cursor.execute('UPDATE users SET balance = balance - ? WHERE id = ?',
+        cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s',
                        (total_price, session['user_id']))
         
-        cursor.execute('UPDATE users SET balance = balance + ? WHERE id = ?',
+        cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s',
                        (final_price, negotiation['seller_id']))
         
-        cursor.execute('UPDATE accounts SET status = ? WHERE id = ?',
+        cursor.execute('UPDATE accounts SET status = %s WHERE id = %s',
                        ('sold', negotiation['account_id']))
         
-        cursor.execute('UPDATE negotiations SET status = ? WHERE id = ?',
+        cursor.execute('UPDATE negotiations SET status = %s WHERE id = %s',
                        ('accepted', negotiation_id))
         
         # 拒绝其他议价
         cursor.execute('''
             UPDATE negotiations SET status = 'rejected'
-            WHERE account_id = ? AND id != ?
+            WHERE account_id = %s AND id != %s
         ''', (negotiation['account_id'], negotiation_id))
         
-        cursor.execute('INSERT INTO transactions (buyer_id, account_id, price, insurance) VALUES (?, ?, ?, ?)',
+        cursor.execute('INSERT INTO transactions (buyer_id, account_id, price, insurance) VALUES (%s, %s, %s, %s)',
                        (session['user_id'], negotiation['account_id'], final_price, insurance_amount))
         
         conn.commit()
