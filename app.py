@@ -747,5 +747,6 @@ if __name__ == '__main__':
     add_images_column()
     # 添加保险字段
     add_insurance_column()
-    # 启动应用（host='0.0.0.0' 允许局域网访问）
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    # Railway 使用 PORT 环境变量，本地默认 5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, port=port, host='0.0.0.0')
